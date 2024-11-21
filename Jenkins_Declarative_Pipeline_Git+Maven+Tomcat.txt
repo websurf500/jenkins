@@ -1,0 +1,29 @@
+sh 'scp -o StrictHostKeyChecking=no target/maven-web-app.war ec2-user@13.233.155.211:/home/ec2-user/apache-tomcat-10.1.33/webapps'
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'maven-3.9.9'
+    }
+    stages {
+        stage('Git Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/websurf500/maven-web-app.git'
+            }
+        }
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Deployment') {
+            steps {
+                sshagent(['Tomcat_Credentials_SSH']) {
+                sh 'scp -o StrictHostKeyChecking=no target/maven-web-app.war ec2-user@13.233.155.211:/home/ec2-user/apache-tomcat-10.1.33/webapps'
+}
+            }
+        }
+    }
+}
