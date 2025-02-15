@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven-3.9.9'
+    }
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/websurf500/maven-web-app1.git'
+            }
+        }
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Docker Build & Publish') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'DOCKER-HUB_CREDENTIALS', toolName: 'docker') {
+                        sh 'docker build -t maven-web-app1 .'
+                        sh 'docker tag maven-web-app1 websurf500/maven-web-app1'
+                        sh 'docker push websurf500/maven-web-app1'
+}
+                }
+                
+            }
+        }
+        
+        stage('K8s Deployment') {
+            steps {
+                sh 'kubectl apply -f k8s_manifest.yml'
+            }
+        }
+    }
+}
